@@ -1,0 +1,58 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Environment files
+.env
+.venv/
+env/
+venv/
+*.env
+
+# Jupyter / Colab
+.ipynb_checkpoints/
+*.ipynb
+
+# Transformers cache & datasets
+.cache/
+datasets/
+*.arrow
+*.jsonl
+
+# Hugging Face
+~/.cache/huggingface/
+~/.huggingface/
+*.safetensors
+*.h5
+*.ckpt
+*.pt
+*.bin
+
+# Model files
+my_qa_model/
+qa-model/
+
+# OS/Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and checkpoints
+*.log
+*.out
+*.ckpt
+checkpoints/
+runs/
+logs/
+
+# Colab output files
+*.wav
+*.mp4
+*.webm
+*.csv
+*.tsv
+*.txt
+.model/

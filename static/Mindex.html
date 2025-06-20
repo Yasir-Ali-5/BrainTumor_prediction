@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChatGPT Bot</title>
+  <style>
+    :root {
+      --primary-start: #7F00FF;
+      --primary-end: #E100FF;
+      --user-bg: #6C5CE7;
+      --bot-bg: #DDE6ED;
+      --accent: #00B894;
+      --text-user: #FFFFFF;
+      --text-bot: #2D3436;
+      --transition-fast: 0.2s ease-in-out;
+      --avatar-size: 32px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .chat-container {
+      background: #FFFFFF;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      overflow: hidden;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    .chat-header {
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      padding: 1rem;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-header h2 {
+      color: #FFF;
+      font-size: 1.75rem;
+      letter-spacing: 1px;
+    }
+    .chat-header button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #FFF;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background var(--transition-fast);
+    }
+    .chat-header button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .chat-box {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: #F7F9FC;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-box::-webkit-scrollbar { width: 6px; }
+    .chat-box::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+    }
+    .message {
+      margin-bottom: 0.75rem;
+      display: flex;
+      opacity: 0;
+      animation: fadeIn 0.3s forwards;
+      align-items: flex-end;
+    }
+    .message.user { justify-content: flex-end; }
+    .message.bot { justify-content: flex-start; }
+    .avatar {
+      width: var(--avatar-size);
+      height: var(--avatar-size);
+      border-radius: 50%;
+      margin: 0 0.5rem;
+      flex-shrink: 0;
+    }
+    .bubble {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      position: relative;
+      word-wrap: break-word;
+      transition: transform var(--transition-fast);
+      font-size: 0.95rem;
+    }
+    .bubble.user:hover,
+    .bubble.bot:hover { transform: scale(1.02); }
+    .bubble.user {
+      background: var(--user-bg);
+      color: var(--text-user);
+      border-bottom-right-radius: 0;
+    }
+    .bubble.bot {
+      background: var(--bot-bg);
+      color: var(--text-bot);
+      border-bottom-left-radius: 0;
+    }
+    .bubble.user::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -8px;
+      border-top: 8px solid var(--user-bg);
+      border-left: 8px solid transparent;
+    }
+    .bubble.bot::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -8px;
+      border-top: 8px solid var(--bot-bg);
+      border-right: 8px solid transparent;
+    }
+    .input-area {
+      display: flex;
+      border-top: 1px solid #E0E0E0;
+      padding: 0.75rem;
+      background: #FFF;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid #CCC;
+      border-radius: 2rem;
+      margin-right: 0.75rem;
+      font-size: 1rem;
+      transition: border-color var(--transition-fast);
+    }
+    .input-area input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 5px rgba(0,184,148,0.4);
+    }
+    .input-area button {
+      background: var(--accent);
+      border: none;
+      color: #FFF;
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: filter var(--transition-fast);
+    }
+    .input-area button:disabled {
+      background: #AAA;
+      cursor: not-allowed;
+      filter: grayscale(50%);
+    }
+    .input-area button:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+    .send-icon, .clear-icon {
+      width: 1em;
+      height: 1em;
+      display: inline-block;
+      fill: currentColor;
+    }
+    .loading .bubble {
+      background: var(--bot-bg) !important;
+      color: #888;
+      animation: pulse 1s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>Personal GPT Assistant</h2>
+      <button id="clear-btn" title="Clear chat">Clear</button>
+    </div>
+    <div id="chat-box" class="chat-box"></div>
+    <div class="input-area">
+      <input id="user-input" type="text" placeholder="Type your message..." />
+      <button id="send-btn">
+        <svg class="send-icon" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        Send
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const clearBtn = document.getElementById('clear-btn');
+
+    function appendMessage(role, text) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `message ${role}`;
+      if (role === 'bot') {
+        const avatar = document.createElement('img');
+        avatar.src = 'https://i.pravatar.cc/32?img=5';
+        avatar.className = 'avatar';
+        wrapper.appendChild(avatar);
+      }
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      if (role === 'user') {
+        const avatar = document.createElement('img');
+        avatar.src = 'https://i.pravatar.cc/32?img=3';
+        avatar.className = 'avatar';
+        wrapper.appendChild(avatar);
+      }
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+      appendMessage('user', userMessage);
+      input.value = '';
+      sendBtn.disabled = true;
+      
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'message bot loading';
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'bubble bot';
+      loadingBubble.textContent = 'Typing...';
+      loadingEl.appendChild(loadingBubble);
+      chatBox.appendChild(loadingEl);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage })
+        });
+        const data = await response.json();
+        chatBox.removeChild(loadingEl);
+        appendMessage('bot', data.reply || 'Error: No response');
+      } catch (err) {
+        chatBox.removeChild(loadingEl);
+        appendMessage('bot', 'Error: ' + err.message);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    function clearChat() {
+      chatBox.innerHTML = '';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+    clearBtn.addEventListener('click', clearChat);
+  </script>
+</body>
+</html>

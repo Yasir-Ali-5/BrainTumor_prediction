@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainScan AI - Tumor Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4CAF50; /* A vibrant green */
+            --primary-hover-color: #45a049;
+            --accent-color: #007bff;
+            --background-start: #e0f2f7; /* Light blue */
+            --background-end: #c8e6f0; /* Slightly darker blue */
+            --card-background: #ffffff;
+            --text-color: #333;
+            --heading-color: #2c3e50;
+            --border-color: #ddd;
+            --error-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            color: var(--heading-color);
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        #upload-container {
+            background-color: var(--card-background);
+            margin-top: 30px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid var(--border-color);
+        }
+
+        p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Custom file input styling */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-button {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background-color: transparent;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .file-input-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .file-input-button svg {
+            fill: currentColor; /* Inherit color from parent */
+            height: 1.2em;
+            width: 1.2em;
+        }
+
+        #file-name-display {
+            margin-top: 10px;
+            font-size: 0.95em;
+            color: #777;
+        }
+
+        button {
+            padding: 15px 35px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+            width: 100%;
+            max-width: 250px;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+        }
+
+        #prediction-result {
+            margin-top: 30px;
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            min-height: 30px; /* To prevent layout shift when result appears */
+        }
+
+        #image-preview {
+            max-width: 100%;
+            height: auto;
+            max-height: 250px;
+            object-fit: contain;
+            margin-top: 25px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 15px;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            #upload-container {
+                padding: 25px;
+            }
+            button {
+                font-size: 1.1em;
+                padding: 12px 25px;
+            }
+            #prediction-result {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>BrainScan AI</h1>
+    <p>Empowering healthcare with intelligent MRI analysis.</p>
+
+    <div id="upload-container">
+        <p>Upload an MRI image to get an instant tumor detection:</p>
+
+        <div class="file-input-wrapper">
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+            <button class="file-input-button" type="button">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v4h4v2h-4v4h-2v-4H7v-2h4z"/>
+                </svg>
+                Choose MRI Image
+            </button>
+            <span id="file-name-display">No file chosen</span>
+        </div>
+        
+        <img id="image-preview" src="#" alt="Image Preview">
+        
+        <button onclick="uploadImage()">Analyze Image</button>
+
+        <div id="prediction-result"></div>
+        <div class="error-message" id="error-message"></div>
+    </div>
+    
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            const output = document.getElementById('image-preview');
+            const fileNameDisplay = document.getElementById('file-name-display');
+            
+            // Clear previous results/errors when a new file is selected
+            document.getElementById('prediction-result').innerText = '';
+            document.getElementById('error-message').innerText = '';
+
+            if (event.target.files && event.target.files[0]) {
+                const file = event.target.files[0];
+
+                // Set file name display
+                fileNameDisplay.innerText = file.name;
+
+                // Read the file as a Data URL for preview
+                reader.onload = function() {
+                    output.src = reader.result;
+                    output.style.display = 'block'; // Show the image
+                };
+                reader.onerror = function() {
+                    console.error("FileReader error: ", reader.error);
+                    output.style.display = 'none';
+                    fileNameDisplay.innerText = 'Error loading file';
+                    document.getElementById('error-message').innerText = 'Could not load image file.';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // No file selected or cleared
+                output.style.display = 'none';
+                output.src = ''; // Clear the image source
+                fileNameDisplay.innerText = 'No file chosen';
+            }
+        }
+
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const resultDiv = document.getElementById('prediction-result');
+            const errorDiv = document.getElementById('error-message');
+            
+            resultDiv.innerText = 'Analyzing...'; // Provide immediate feedback
+            resultDiv.style.color = '#007bff'; // Change color to indicate processing
+            errorDiv.innerText = ''; 
+
+            const file = fileInput.files[0];
+
+            if (!file) {
+                errorDiv.innerText = "Please select an image file.";
+                resultDiv.innerText = ''; // Clear "Analyzing..."
+                return;
+            }
+
+            const MAX_FILE_SIZE_MB = 5;
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                errorDiv.innerText = `File size exceeds ${MAX_FILE_SIZE_MB}MB. Please choose a smaller image.`;
+                resultDiv.innerText = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/predict/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! Status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                resultDiv.innerText = `Prediction: ${result.prediction}`;
+                // Set color based on prediction for better visual cue
+                resultDiv.style.color = (result.prediction === "Tumor detected") ? '#dc3545' : '#4CAF50'; // Use direct color here if var isn't accessible in JS context
+
+            } catch (error) {
+                console.error('Prediction Error:', error);
+                errorDiv.innerText = `Prediction failed: ${error.message}. Please try again.`;
+                resultDiv.innerText = ''; // Clear "Analyzing..."
+                resultDiv.style.color = '#dc3545'; // Use direct color here if var isn't accessible in JS context
+            }
+        }
+    </script>
+</body>
+</html>
